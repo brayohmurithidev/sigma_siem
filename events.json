@@ -1,0 +1,22 @@
+[
+  {
+    "id": "evt-456",
+    "timestamp": "2025-02-10T14:30:00Z",
+    "source": "security-system",
+    "logsource": {
+      "product": "windows",
+      "category": "ps_module"
+    },
+    "payload": "rundll32 shell32.dll shellexec_rundll invoke comspec iex"
+  },
+  {
+    "id": "evt-789",
+    "timestamp": "2025-02-10T15:00:00Z",
+    "source": "security-system",
+    "logsource": {
+      "product": "linux",
+      "category": "bash_script"
+    },
+    "payload": "echo Hello World"
+  }
+]
