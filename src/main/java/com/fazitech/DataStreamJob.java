@@ -122,11 +122,9 @@ public class DataStreamJob {
 
 
 						if(sigmaRules != null) {
-//							boolean passAtleastOne = false;
-////							System.out.println("sigma rules on flink: " + sigmaRules);
 							for (JsonNode rule : sigmaRules) {
 								if(matchesSigmaRule(event, rule)) {
-//								//add the rule title to list of matched rules
+									//add the rule title to list of matched rules
 									if(!event.has("matched_rules")){
 										((ObjectNode) event).putArray("matched_rules");
 									}
@@ -165,14 +163,7 @@ public class DataStreamJob {
 
 
 
-		//split the stream into success and failure
-//		DataStream<String> successStream = processedEvents.filter(event-> event.startsWith("SUCCESS:")).map(event -> event.replaceFirst("success:", ""));
-//
-//		DataStream<String> failureStream = processedEvents.filter(event-> event.startsWith("FAILURE:")).map(event -> event.replaceFirst("failure:", ""));
 
-//
-//		// sink to kafka
-//		successStream.sinkTo(successSink);
 //		failureStream.sinkTo(failureSink);
 
 		processedEvents.sinkTo(successSink);
