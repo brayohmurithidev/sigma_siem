@@ -112,6 +112,7 @@ public class DataStreamJob {
 									}
 									ArrayNode matchedRules = (ArrayNode) event.get("matched_rules");
 									matchedRules.add(rule.get("title").asText());
+									matchedRules.add(rule.get("detection").asText());
 
 									//print event
 									System.out.println("updated event: " + event);
