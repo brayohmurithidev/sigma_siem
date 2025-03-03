@@ -1,42 +1,73 @@
 package com.fazitech;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 
-public class SelectionMatcher {
-    public static boolean checkSelection(JsonNode event, JsonNode selection) {
-        System.out.println("On selection function: " + selection);
-        // Iterate over the fields in the selection
+public class SelectionMatcher implements ConditionMatcher {
+    @Override
+    public boolean matches(JsonNode event, JsonNode detection) {
+        JsonNode selection = detection.path("selection");
+        return checkSelection(event, selection);
+    }
+
+    protected boolean checkSelection(JsonNode event, JsonNode selection) {
         for (java.util.Iterator<String> it = selection.fieldNames(); it.hasNext(); ) {
             String fieldWithModifier = it.next();
-            String fieldName = fieldWithModifier.split("\\|")[0]; // Split on pipe and take the first part
-            System.out.println("Field: " + fieldName);
+            String fieldName = fieldWithModifier.split("\\|")[0];
+            String modifier = fieldWithModifier.contains("|") ? fieldWithModifier.split("\\|")[1] : null;
             JsonNode fieldValue = selection.path(fieldWithModifier);
-            System.out.println("Value: " + fieldValue);
 
-            // Handle single value (exact match)
-            if (fieldValue.isTextual()) {
-                if (!event.path(fieldName).asText().equals(fieldValue.asText())) {
-                    return false;
-                }
+            if (!evaluateField(event, fieldName, modifier, fieldValue)) {
+                return false;
             }
-            // Handle list of values (OR operation)
-            else if (fieldValue.isArray()) {
-                boolean anyMatch = false;
-                for (JsonNode value : fieldValue) {
-                    System.out.println("Value single: " + value + event.path(fieldName));
-                    if (event.path(fieldName).asText().equals(value.asText())) {
-                        System.out.println("Matched value: " + value);
-                        anyMatch = true;
-                        break;
-                    }
-                }
-                if (!anyMatch) {
-                    return anyMatch;
-                }
+        }
+        return true;
+    }
+
+    private boolean evaluateField(JsonNode event, String fieldName, String modifier, JsonNode fieldValue) {
+        if (!event.has(fieldName)) {
+            return false; // Field does not exist in the event
+        }
+
+        String eventValue = event.path(fieldName).asText();
+
+        if (modifier != null) {
+            switch (modifier) {
+                case "contains":
+                    return fieldValue.asText().contains(eventValue);
+                case "cidr":
+                    return isIpInCidrRanges(eventValue, fieldValue);
+                default:
+                    throw new IllegalArgumentException("Unsupported modifier: " + modifier);
             }
         }
 
-        // If all fields in the selection match, return true
-        return true;
+        if (fieldValue.isTextual()) {
+            return eventValue.equals(fieldValue.asText());
+        } else if (fieldValue.isArray()) {
+            for (JsonNode value : fieldValue) {
+                if (eventValue.equals(value.asText())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return false;
+    }
+
+    private boolean isIpInCidrRanges(String ip, JsonNode cidrRanges) {
+        for (JsonNode cidr : cidrRanges) {
+            if (isIpInCidr(ip, cidr.asText())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isIpInCidr(String ip, String cidr) {
+        // Implement CIDR range checking logic here (e.g., using a library like Apache Commons Net or custom logic)
+        // For simplicity, this is a placeholder implementation.
+        return ip.startsWith(cidr.split("/")[0]);
     }
 }
